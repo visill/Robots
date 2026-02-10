@@ -1,4 +1,4 @@
-package gui;
+package visill.robot.gui;
 
 import java.awt.BorderLayout;
 

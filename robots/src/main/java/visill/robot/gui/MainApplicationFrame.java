@@ -1,4 +1,4 @@
-package gui;
+package visill.robot.gui;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -14,7 +14,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import log.Logger;
+import visill.robot.log.Logger;
 
 /**
  * Что требуется сделать:

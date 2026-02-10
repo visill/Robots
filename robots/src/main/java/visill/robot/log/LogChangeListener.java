@@ -1,4 +1,4 @@
-package log;
+package visill.robot.log;
 
 public interface LogChangeListener
 {
