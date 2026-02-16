@@ -4,17 +4,11 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 
-import javax.swing.JDesktopPane;
-import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.*;
 
 import visill.robot.log.Logger;
+
+import static java.lang.System.exit;
 
 /**
  * Что требуется сделать:
@@ -135,11 +129,29 @@ public class MainApplicationFrame extends JFrame
             testMenu.add(addLogMessageItem);
         }
 
+        JMenu closeMenu = new JMenu("Robot");
+        closeMenu.setMnemonic(KeyEvent.VK_Q);
+        {
+
+            JMenuItem addLogMessageItem = new JMenuItem("Выйти", KeyEvent.VK_Q);
+            addLogMessageItem.addActionListener((event) -> {
+                JOptionPane closeConfirm = new JOptionPane("zxc");
+                Logger.debug("event close");
+
+                var v = JOptionPane.showConfirmDialog(closeConfirm, "Вы точно хотите выйти?");if (v == 0) {
+                    exit(0);
+                }
+            });
+
+            closeMenu.add(addLogMessageItem);
+        }
+
         menuBar.add(lookAndFeelMenu);
         menuBar.add(testMenu);
+        menuBar.add(closeMenu);
         return menuBar;
     }
-    
+
     private void setLookAndFeel(String className)
     {
         try
