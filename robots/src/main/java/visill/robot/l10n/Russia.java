@@ -8,5 +8,7 @@ public class Russia {
         UIManager.put("OptionPane.noButtonText", "Нет");
         UIManager.put("OptionPane.cancelButtonText", "Отмена");
         UIManager.put("OptionPane.titleText", "Выберите опцию");
+        UIManager.put("QuitButton.quitText", "Вы точно хотите выйти?");
+
     }
 }
