@@ -3,6 +3,8 @@ package visill.robot.gui;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.*;
 
@@ -41,6 +43,14 @@ public class MainApplicationFrame extends JFrame
 
         setJMenuBar(generateMenuBar());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (closeWindow()){
+                    super.windowClosing(e);
+                }
+            }
+        });
     }
     
     protected LogWindow createLogWindow()
@@ -135,10 +145,7 @@ public class MainApplicationFrame extends JFrame
 
             JMenuItem addLogMessageItem = new JMenuItem("Выйти", KeyEvent.VK_Q);
             addLogMessageItem.addActionListener((event) -> {
-                JOptionPane closeConfirm = new JOptionPane("zxc");
-                Logger.debug("event close");
-
-                var v = JOptionPane.showConfirmDialog(closeConfirm, "Вы точно хотите выйти?");if (v == 0) {
+                if (closeWindow()) {
                     exit(0);
                 }
             });
@@ -164,5 +171,12 @@ public class MainApplicationFrame extends JFrame
         {
             // just ignore
         }
+    }
+
+    private boolean closeWindow() {
+        Logger.debug("event close");
+        JOptionPane closeConfirm = new JOptionPane("zxc");
+        var v = JOptionPane.showConfirmDialog(closeConfirm, "Вы точно хотите выйти?");
+        return (v == JOptionPane.OK_OPTION);
     }
 }
