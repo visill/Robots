@@ -1,4 +1,4 @@
-package visill.robot.gui;
+package visill.robot.view;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
@@ -7,9 +7,8 @@ import java.awt.TextArea;
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
 
-import visill.robot.log.LogChangeListener;
-import visill.robot.log.LogEntry;
-import visill.robot.log.LogWindowSource;
+import visill.robot.model.log.LogChangeListener;
+import visill.robot.model.log.LogEntry;
 
 public class LogWindow extends JInternalFrame implements LogChangeListener
 {

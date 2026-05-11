@@ -1,4 +1,4 @@
-package visill.robot.gui;
+package visill.robot.view;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -8,7 +8,7 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.*;
 
-import visill.robot.log.Logger;
+import visill.robot.model.log.Logger;
 
 import static java.lang.System.exit;
 

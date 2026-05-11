@@ -1,4 +1,8 @@
-package visill.robot.log;
+package visill.robot.view;
+
+import visill.robot.model.log.LogChangeListener;
+import visill.robot.model.log.LogEntry;
+import visill.robot.model.log.LogLevel;
 
 import java.util.ArrayList;
 import java.util.Collections;
