@@ -1,4 +1,6 @@
-package visill.robot.log;
+package visill.robot.model.log;
+
+import visill.robot.view.LogWindowSource;
 
 public final class Logger
 {
