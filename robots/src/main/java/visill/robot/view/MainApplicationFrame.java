@@ -1,27 +1,26 @@
 package visill.robot.view;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import javax.swing.*;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
 
+import visill.robot.model.RobotModel;
 import visill.robot.model.log.Logger;
+import visill.robot.save.SaveManager;
 
-import static java.lang.System.exit;
-
-/**
- * Что требуется сделать:
- * 1. Метод создания меню перегружен функционалом и трудно читается. 
- * Следует разделить его на серию более простых методов (или вообще выделить отдельный класс).
- *
- */
 public class MainApplicationFrame extends JFrame
 {
     private final JDesktopPane desktopPane = new JDesktopPane();
-    
+    private final SaveManager saveManager = new SaveManager("WindowsPosition.json");
+    private final HashMap<String, JInternalFrame> internalFrames = new HashMap<>();
     public MainApplicationFrame() {
         //Make the big window be indented 50 pixels from each edge
         //of the screen.
@@ -32,27 +31,61 @@ public class MainApplicationFrame extends JFrame
             screenSize.height - inset*2);
 
         setContentPane(desktopPane);
-        
-        
-        LogWindow logWindow = createLogWindow();
-        addWindow(logWindow);
 
-        GameWindow gameWindow = new GameWindow();
-        gameWindow.setSize(400,  400);
-        addWindow(gameWindow);
+        LogWindow logWindow = createLogWindow();
+        addWindow(logWindow,"logger");
+        RobotModel robot = new RobotModel();
+        GameWindow gameWindow = new GameWindow(robot);
+        tryToLoad(gameWindow, "gameWindow", 400, 400, 320, 10, false);
+        addWindow(gameWindow, "gameWindow");
 
         setJMenuBar(generateMenuBar());
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        SwingUtilities.invokeLater(() -> tryToLoad(this, "main", screenSize.width, screenSize.height, 0, 0, false));
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        for (String title : internalFrames.keySet()) {
+            SaveInternalFrameListener(internalFrames.get(title), title);
+        }
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if (closeWindow()){
-                    super.windowClosing(e);
-                }
+                closeWindow();
             }
         });
     }
-    
+    private void closeWindow() {
+        Logger.debug("event close");
+        var v = JOptionPane.showConfirmDialog(this, "Вы точно хотите выйти?");
+        if (v == JOptionPane.OK_OPTION) {
+            for (JInternalFrame window : internalFrames.values()) {
+                window.doDefaultCloseAction();
+            }
+            saveManager.saveWindow(this, "main");
+            System.exit(0);
+        }
+    }
+    protected void addWindow(JInternalFrame frame, String title) {
+        desktopPane.add(frame);
+        internalFrames.put(title, frame);
+        frame.setVisible(true);
+    }
+    protected void tryToLoad(Component window, String title, int defaultWidth, int defaultHeight, int locX, int locY, boolean defaultMaximized) {
+        if (!saveManager.loadWindow(window, title)) {
+            if (defaultMaximized && window instanceof Frame frame) {
+                SwingUtilities.invokeLater(() -> frame.setExtendedState(Frame.MAXIMIZED_BOTH));
+            } else {
+                window.setLocation(locX, locY);
+                window.setSize(defaultWidth, defaultHeight);
+            }
+        }
+    }
+    protected void SaveInternalFrameListener(JInternalFrame frame, String title) {
+        frame.addInternalFrameListener(new InternalFrameAdapter() {
+            @Override
+            public void internalFrameClosing(InternalFrameEvent e) {
+                saveManager.saveWindow(frame, title);
+            }
+        });
+    }
     protected LogWindow createLogWindow()
     {
         LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource());
@@ -63,13 +96,6 @@ public class MainApplicationFrame extends JFrame
         Logger.debug("Протокол работает");
         return logWindow;
     }
-    
-    protected void addWindow(JInternalFrame frame)
-    {
-        desktopPane.add(frame);
-        frame.setVisible(true);
-    }
-    
 //    protected JMenuBar createMenuBar() {
 //        JMenuBar menuBar = new JMenuBar();
 // 
@@ -133,9 +159,7 @@ public class MainApplicationFrame extends JFrame
         
         {
             JMenuItem addLogMessageItem = new JMenuItem("Сообщение в лог", KeyEvent.VK_S);
-            addLogMessageItem.addActionListener((event) -> {
-                Logger.debug("Новая строка");
-            });
+            addLogMessageItem.addActionListener((event) -> Logger.debug("Новая строка"));
             testMenu.add(addLogMessageItem);
         }
 
@@ -144,11 +168,7 @@ public class MainApplicationFrame extends JFrame
         {
 
             JMenuItem addLogMessageItem = new JMenuItem("Выйти", KeyEvent.VK_Q);
-            addLogMessageItem.addActionListener((event) -> {
-                if (closeWindow()) {
-                    exit(0);
-                }
-            });
+            addLogMessageItem.addActionListener((event) -> closeWindow());
 
             closeMenu.add(addLogMessageItem);
         }
@@ -173,10 +193,5 @@ public class MainApplicationFrame extends JFrame
         }
     }
 
-    private boolean closeWindow() {
-        Logger.debug("event close");
-        JOptionPane closeConfirm = new JOptionPane("zxc");
-        var v = JOptionPane.showConfirmDialog(closeConfirm, "Вы точно хотите выйти?");
-        return (v == JOptionPane.OK_OPTION);
-    }
+
 }

@@ -1,8 +1,16 @@
 package visill.robot.model;
 
 import java.awt.*;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class RobotModel implements IRobot {
+    private final Timer m_timer = initTimer();
+
+    private static Timer initTimer()
+    {
+        return new Timer("events generator", true);
+    }
     private volatile double m_robotPositionX = 100;
     private volatile double m_robotPositionY = 100;
     private volatile double m_robotDirection = 0;
@@ -13,7 +21,16 @@ public class RobotModel implements IRobot {
     private static final double maxVelocity = 0.5;
     private static final double maxAngularVelocity = 0.005;
 
-    public RobotModel() {}
+    public RobotModel() {
+        m_timer.schedule(new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                Tick();
+            }
+        }, 0, 10);
+    }
 
     public Point GetCords() {
         return new Point(round(m_robotPositionX),round(m_robotPositionY));
@@ -65,7 +82,7 @@ public class RobotModel implements IRobot {
             angularVelocity = -maxAngularVelocity;
         }
 
-        moveRobot(maxVelocity, angularVelocity, 10);
+        moveRobot(maxVelocity, angularVelocity, 5);
     }
 
     private static double applyLimits(double value, double min, double max)
@@ -81,24 +98,25 @@ public class RobotModel implements IRobot {
     {
         velocity = applyLimits(velocity, 0, maxVelocity);
         angularVelocity = applyLimits(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
-        double newX = m_robotPositionX + velocity / angularVelocity *
-                (Math.sin(m_robotDirection  + angularVelocity * duration) -
-                        Math.sin(m_robotDirection));
-        if (!Double.isFinite(newX))
+        double newX;
+        double newY;
+        if (Math.abs(angularVelocity) < 0.000001)
         {
             newX = m_robotPositionX + velocity * duration * Math.cos(m_robotDirection);
-        }
-        double newY = m_robotPositionY - velocity / angularVelocity *
-                (Math.cos(m_robotDirection  + angularVelocity * duration) -
-                        Math.cos(m_robotDirection));
-        if (!Double.isFinite(newY))
-        {
             newY = m_robotPositionY + velocity * duration * Math.sin(m_robotDirection);
+        }else {
+            double angleDelta = angularVelocity * duration;
+            newX = m_robotPositionX + (velocity / angularVelocity) *
+                    (Math.sin(m_robotDirection + angleDelta) - Math.sin(m_robotDirection));
+
+            newY = m_robotPositionY - (velocity / angularVelocity) *
+                    (Math.cos(m_robotDirection + angleDelta) - Math.cos(m_robotDirection));
         }
-        m_robotPositionX = newX;
-        m_robotPositionY = newY;
-        double newDirection = asNormalizedRadians(m_robotDirection + angularVelocity * duration);
-        m_robotDirection = newDirection;
+        if (Double.isFinite(newX) && Double.isFinite(newY)) {
+            m_robotPositionX = newX;
+            m_robotPositionY = newY;
+        }
+        m_robotDirection = asNormalizedRadians(m_robotDirection + angularVelocity * duration);
     }
 
     private static double asNormalizedRadians(double angle)
