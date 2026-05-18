@@ -21,8 +21,14 @@ dependencies {
 
     // This dependency is used by the application.
     implementation(libs.guava)
+    implementation("com.google.code.gson:gson:2.13.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+}
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
@@ -33,4 +39,8 @@ java {
 application {
     // Define the main class for the application.
     mainClass = "visill.robot.App"
+}
+tasks.test {
+    // Указываем Gradle использовать движок JUnit Platform
+    useJUnitPlatform()
 }

@@ -17,14 +17,13 @@ import javax.swing.JPanel;
 
 public class GameVisualizer extends JPanel
 {
+    private final IRobot m_robot;
     private final Timer m_timer = initTimer();
-    
-    private static Timer initTimer() 
+
+    private static Timer initTimer()
     {
         return new Timer("events generator", true);
     }
-    private final IRobot m_robot;
-
 
     public GameVisualizer(IRobot robot)
     {
@@ -37,14 +36,6 @@ public class GameVisualizer extends JPanel
                 onRedrawEvent();
             }
         }, 0, 50);
-        m_timer.schedule(new TimerTask()
-        {
-            @Override
-            public void run()
-            {
-                onModelUpdateEvent();
-            }
-        }, 0, 10);
         addMouseListener(new MouseAdapter()
         {
             @Override
@@ -65,12 +56,6 @@ public class GameVisualizer extends JPanel
     protected void onRedrawEvent()
     {
         EventQueue.invokeLater(this::repaint);
-    }
-
-    
-    protected void onModelUpdateEvent()
-    {
-        m_robot.Tick();
     }
 
     @Override
