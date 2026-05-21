@@ -13,6 +13,7 @@ import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 
 import visill.robot.model.RobotModel;
+import visill.robot.model.RobotObserver;
 import visill.robot.model.log.Logger;
 import visill.robot.save.SaveManager;
 
@@ -35,6 +36,17 @@ public class MainApplicationFrame extends JFrame
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow,"logger");
         RobotModel robot = new RobotModel();
+        robot.addObserver(new RobotObserver() {
+            private int c = 0;
+            @Override
+            public void onRobotMoved() {
+                var coords = robot.GetCords();
+                if (c%10 == 0){
+                    Logger.debug("robot coords is x:%d y:%d".formatted(coords.x,coords.y));
+                }
+                c+=1;
+            }
+        });
         GameWindow gameWindow = new GameWindow(robot);
         tryToLoad(gameWindow, "gameWindow", 400, 400, 320, 10, false);
         addWindow(gameWindow, "gameWindow");
