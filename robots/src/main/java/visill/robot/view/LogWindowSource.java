@@ -1,11 +1,8 @@
 package visill.robot.view;
 
-import visill.robot.model.log.LogChangeListener;
-import visill.robot.model.log.LogEntry;
-import visill.robot.model.log.LogLevel;
+import visill.robot.model.log.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 
 /**
  * Что починить:
@@ -16,18 +13,25 @@ import java.util.Collections;
  * величиной m_iQueueLength (т.е. реально нужна очередь сообщений 
  * ограниченного размера) 
  */
+
 public class LogWindowSource
 {
-    private int m_iQueueLength;
-    
-    private ArrayList<LogEntry> m_messages;
+    private final int m_iQueueLength;
+    private int m_size = 0;
+
     private final ArrayList<LogChangeListener> m_listeners;
     private volatile LogChangeListener[] m_activeListeners;
-    
+    private LogNode head = null;
+    private LogNode tail = null;
+    long tailIndex = 0;
+    private final Map<Long, LogNode> nodeMap = new HashMap<>();
     public LogWindowSource(int iQueueLength) 
     {
+        if (iQueueLength <= 0) {
+            throw new IllegalArgumentException("Length must be > 0");
+        }
         m_iQueueLength = iQueueLength;
-        m_messages = new ArrayList<LogEntry>(iQueueLength);
+
         m_listeners = new ArrayList<LogChangeListener>();
     }
     
@@ -52,7 +56,31 @@ public class LogWindowSource
     public void append(LogLevel logLevel, String strMessage)
     {
         LogEntry entry = new LogEntry(logLevel, strMessage);
-        m_messages.add(entry);
+        long currentIdx = tailIndex++;
+        LogNode newNode = new LogNode(entry, currentIdx);
+        nodeMap.put(currentIdx, newNode);
+
+        synchronized (this) {
+            if (head == null) {
+                head = newNode;
+                tail = newNode;
+                m_size = 1;
+            } else {
+                // Добавляем в конец односвязного списка
+                tail.next = newNode;
+                tail = newNode;
+                m_size++;
+
+                if (m_size > m_iQueueLength) {
+                    LogNode oldHead = head;
+                    head = head.next;
+                    nodeMap.remove(oldHead.getGlobalIndex());
+
+                    oldHead.next = null;
+                    m_size--;
+                }
+            }
+        }
         LogChangeListener [] activeListeners = m_activeListeners;
         if (activeListeners == null)
         {
@@ -71,23 +99,33 @@ public class LogWindowSource
         }
     }
     
-    public int size()
+    public synchronized int size()
     {
-        return m_messages.size();
+        return m_size;
     }
 
-    public Iterable<LogEntry> range(int startFrom, int count)
+    public synchronized Iterable<LogEntry> range(long startFromGlobalIdx, int count)
     {
-        if (startFrom < 0 || startFrom >= m_messages.size())
-        {
-            return Collections.emptyList();
+        LogNode startNode = nodeMap.get(startFromGlobalIdx);
+        count = Math.min(count,m_size);
+        return new LogRangeResult(startNode, count);
+    }
+    public synchronized Iterable<LogEntry> lastN(int n) {
+        if (n <=0) {
+            throw new IllegalArgumentException("N must be > 0");
         }
-        int indexTo = Math.min(startFrom + count, m_messages.size());
-        return m_messages.subList(startFrom, indexTo);
-    }
+        int max_n = Math.min(n, m_size);
+        if (tail == null) {
+            return new ArrayList<LogEntry>();
+        }
+        long startIdx = tail.getGlobalIndex() - max_n + 1;
 
-    public Iterable<LogEntry> all()
+        return range(startIdx, max_n);
+    }
+    public synchronized  Iterable<LogEntry> all()
     {
-        return m_messages;
+        int len = size();
+        return range(head.getGlobalIndex(),len);
+
     }
 }

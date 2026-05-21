@@ -1,8 +1,12 @@
 package visill.robot.model;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class RobotModel implements IRobot {
     private final Timer m_timer = initTimer();
@@ -20,7 +24,17 @@ public class RobotModel implements IRobot {
 
     private static final double maxVelocity = 0.5;
     private static final double maxAngularVelocity = 0.005;
-
+    private final List<RobotObserver> m_observers = new ArrayList<>();
+    public void addObserver(RobotObserver observer) {
+        if (observer != null) {
+            m_observers.add(observer);
+        }
+    }
+    private void notifyObservers() {
+        for (RobotObserver observer : m_observers) {
+            observer.onRobotMoved();
+        }
+    }
     public RobotModel() {
         m_timer.schedule(new TimerTask()
         {
@@ -29,7 +43,7 @@ public class RobotModel implements IRobot {
             {
                 Tick();
             }
-        }, 0, 10);
+        }, 100, 10);
     }
 
     public Point GetCords() {
@@ -67,22 +81,20 @@ public class RobotModel implements IRobot {
     {
         double distance = distance(m_targetPositionX, m_targetPositionY,
                 m_robotPositionX, m_robotPositionY);
-        if (distance < 0.5)
+
+        if (distance < 10)
         {
             return;
         }
         double angleToTarget = angleTo(m_robotPositionX, m_robotPositionY, m_targetPositionX, m_targetPositionY);
+        double diff = Math.atan2(Math.sin(angleToTarget - m_robotDirection), Math.cos(angleToTarget - m_robotDirection));
+
         double angularVelocity = 0;
-        if (angleToTarget > m_robotDirection)
-        {
-            angularVelocity = maxAngularVelocity;
-        }
-        if (angleToTarget < m_robotDirection)
-        {
-            angularVelocity = -maxAngularVelocity;
-        }
+        angularVelocity = Math.copySign(maxAngularVelocity, diff);
+
 
         moveRobot(maxVelocity, angularVelocity, 5);
+        notifyObservers();
     }
 
     private static double applyLimits(double value, double min, double max)
@@ -97,7 +109,13 @@ public class RobotModel implements IRobot {
     private void moveRobot(double velocity, double angularVelocity, double duration)
     {
         velocity = applyLimits(velocity, 0, maxVelocity);
+
         angularVelocity = applyLimits(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
+
+        double min = -0.03;
+        double max = 0.03;
+        double randomValue = ThreadLocalRandom.current().nextDouble(min, max);
+        angularVelocity += randomValue;
         double newX;
         double newY;
         if (Math.abs(angularVelocity) < 0.000001)
@@ -136,5 +154,4 @@ public class RobotModel implements IRobot {
     {
         return (int)(value + 0.5);
     }
-
 }

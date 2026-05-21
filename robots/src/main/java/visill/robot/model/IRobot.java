@@ -8,4 +8,5 @@ public interface IRobot {
     double GetDirection();
     void SetTarget(Point p);
     void Tick();
+    void addObserver(RobotObserver observer);
 }

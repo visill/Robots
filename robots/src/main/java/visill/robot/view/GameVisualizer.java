@@ -1,12 +1,9 @@
 package visill.robot.view;
 
 import visill.robot.model.IRobot;
+import visill.robot.model.RobotObserver;
 
-import java.awt.Color;
-import java.awt.EventQueue;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
@@ -15,27 +12,14 @@ import java.util.TimerTask;
 
 import javax.swing.JPanel;
 
-public class GameVisualizer extends JPanel
+public class GameVisualizer extends JPanel implements RobotObserver
 {
     private final IRobot m_robot;
-    private final Timer m_timer = initTimer();
-
-    private static Timer initTimer()
-    {
-        return new Timer("events generator", true);
-    }
 
     public GameVisualizer(IRobot robot)
     {
         m_robot = robot;
-        m_timer.schedule(new TimerTask()
-        {
-            @Override
-            public void run()
-            {
-                onRedrawEvent();
-            }
-        }, 0, 50);
+        robot.addObserver(this);
         addMouseListener(new MouseAdapter()
         {
             @Override
@@ -101,5 +85,10 @@ public class GameVisualizer extends JPanel
         fillOval(g, x, y, 5, 5);
         g.setColor(Color.BLACK);
         drawOval(g, x, y, 5, 5);
+    }
+
+    @Override
+    public void onRobotMoved() {
+        onRedrawEvent();
     }
 }
